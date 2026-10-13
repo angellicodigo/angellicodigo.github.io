@@ -1,266 +1,682 @@
-/*
-	Multiverse by HTML5 UP
-	html5up.net | @ajlkn
-	Free for personal and commercial use under the CCA 3.0 license (html5up.net/license)
+/**
+ * Photography Portfolio Modernization
+ * Vanilla ES6+ Comparison Lightbox & Gallery Engine
+ *
+ * Originally authored zero-dependency module:
+ * - Pointer Events (pointerdown, pointermove, pointerup, pointercancel, setPointerCapture)
+ * - Draggable split comparison slider with clip-path
+ * - ORIGINAL (RAW) vs EDITED visual badges
+ * - Single-photo fallback
+ * - Keyboard navigation (ArrowLeft, ArrowRight, Escape)
+ * - EXIF metadata display
+ * - Real-time search filtering & empty-state management
+ */
 
-	Added EXIF data and enhanced for Jekyll by Ram Patra
-*/
+(function () {
+  'use strict';
 
-(function ($) {
-	var $window = $(window),
-	  $body = $("body"),
-	  $wrapper = $("#wrapper");
-  
-	// Breakpoints.
-	breakpoints({
-	  xlarge: ["1281px", "1680px"],
-	  large: ["981px", "1280px"],
-	  medium: ["737px", "980px"],
-	  small: ["481px", "736px"],
-	  xsmall: [null, "480px"],
-	});
-  
-	// Hack: Enable IE workarounds.
-	if (browser.name == "ie") $body.addClass("ie");
-  
-	// Touch?
-	if (browser.mobile) $body.addClass("touch");
-  
-	// Transitions supported?
-	if (browser.canUse("transition")) {
-	  // Play initial animations on page load.
-	  $window.on("load", function () {
-		window.setTimeout(function () {
-		  $body.removeClass("is-preload");
-		}, 100);
-	  });
-  
-	  // Prevent transitions/animations on resize.
-	  var resizeTimeout;
-  
-	  $window.on("resize", function () {
-		window.clearTimeout(resizeTimeout);
-  
-		$body.addClass("is-resizing");
-  
-		resizeTimeout = window.setTimeout(function () {
-		  $body.removeClass("is-resizing");
-		}, 100);
-	  });
-	}
-  
-	// Scroll back to top.
-	$window.scrollTop(0);
-  
-	// Panels.
-	var $panels = $(".panel");
-  
-	$panels.each(function () {
-	  var $this = $(this),
-		$toggles = $('[href="#' + $this.attr("id") + '"]'),
-		$closer = $('<div class="closer" />').appendTo($this);
-  
-	  // Closer.
-	  $closer.on("click", function (event) {
-		$this.trigger("---hide");
-	  });
-  
-	  // Events.
-	  $this
-		.on("click", function (event) {
-		  event.stopPropagation();
-		})
-		.on("---toggle", function () {
-		  if ($this.hasClass("active")) $this.triggerHandler("---hide");
-		  else $this.triggerHandler("---show");
-		})
-		.on("---show", function () {
-		  // Hide other content.
-		  if ($body.hasClass("content-active")) $panels.trigger("---hide");
-  
-		  // Activate content, toggles.
-		  $this.addClass("active");
-		  $toggles.addClass("active");
-  
-		  // Activate body.
-		  $body.addClass("content-active");
-		})
-		.on("---hide", function () {
-		  // Deactivate content, toggles.
-		  $this.removeClass("active");
-		  $toggles.removeClass("active");
-  
-		  // Deactivate body.
-		  $body.removeClass("content-active");
-		});
-  
-	  // Toggles.
-	  $toggles
-		.removeAttr("href")
-		.css("cursor", "pointer")
-		.on("click", function (event) {
-		  event.preventDefault();
-		  event.stopPropagation();
-  
-		  $this.trigger("---toggle");
-		});
-	});
-  
-	// Global events.
-	$body.on("click", function (event) {
-	  if ($body.hasClass("content-active")) {
-		event.preventDefault();
-		event.stopPropagation();
-  
-		$panels.trigger("---hide");
-	  }
-	});
-  
-	$window.on("keyup", function (event) {
-	  if (event.keyCode == 27 && $body.hasClass("content-active")) {
-		event.preventDefault();
-		event.stopPropagation();
-  
-		$panels.trigger("---hide");
-	  }
-	});
-  
-	// Header.
-	var $header = $("#header");
-  
-	// Links.
-	$header.find("a").each(function () {
-	  var $this = $(this),
-		href = $this.attr("href");
-  
-	  // Internal link? Skip.
-	  if (!href || href.charAt(0) == "#") return;
-  
-	  // Redirect on click.
-	  $this
-		.removeAttr("href")
-		.css("cursor", "pointer")
-		.on("click", function (event) {
-		  event.preventDefault();
-		  event.stopPropagation();
-  
-		  window.location.href = href;
-		});
-	});
-  
-	// Footer.
-	var $footer = $("#footer");
-  
-	// Copyright.
-	// This basically just moves the copyright line to the end of the *last* sibling of its current parent
-	// when the "medium" breakpoint activates, and moves it back when it deactivates.
-	$footer.find(".copyright").each(function () {
-	  var $this = $(this),
-		$parent = $this.parent(),
-		$lastParent = $parent.parent().children().last();
-  
-	  breakpoints.on("<=medium", function () {
-		$this.appendTo($lastParent);
-	  });
-  
-	  breakpoints.on(">medium", function () {
-		$this.appendTo($parent);
-	  });
-	});
-  
-	// Main.
-	var $main = $("#main"),
-		exifDatas = {};
-  
-	// Thumbs.
-	$main.children(".thumb").each(function () {
-	  var $this = $(this),
-		$image = $this.find(".image"),
-		$image_img = $image.children("img"),
-		x;
-  
-	  // No image? Bail.
-	  if ($image.length == 0) return;
-  
-	  // Image.
-	  // This sets the background of the "image" <span> to the image pointed to by its child
-	  // <img> (which is then hidden). Gives us way more flexibility.
-  
-	  // Set background.
-	  $image.css("background-image", "url(" + $image_img.attr("src") + ")");
-  
-	  // Set background position.
-	  if ((x = $image_img.data("position"))) $image.css("background-position", x);
-  
-	  // Hide original img.
-	  $image_img.hide();
+  // 1. Embedded fallback photo catalog (guarantees zero-dependency offline & static preview)
+  const FALLBACK_PHOTOS = [
+    {
+      id: 'photo-1',
+      title: 'Misty Alpine Forest',
+      date: 'October 2026',
+      filename: 'photo-1',
+      hasPair: true,
+      editedUrl: 'images/fulls/photo-1-edited.jpg',
+      rawUrl: 'images/fulls/photo-1-raw.jpg',
+      thumbUrl: 'images/thumbs/photo-1.jpg',
+      aspectRatio: '3:2',
+      dimensions: { width: 1400, height: 933 },
+      exif: {
+        camera: 'Sony Alpha 7 IV',
+        model: 'Sony Alpha 7 IV',
+        lens: 'FE 24-70mm f/2.8 GM II',
+        focalLength: '45mm',
+        aperture: 'f/4.0',
+        fNumber: '4.0',
+        shutterSpeed: '1/160s',
+        exposureTime: '1/160',
+        iso: '100',
+        isoSpeedRatings: 100
+      }
+    },
+    {
+      id: 'photo-2',
+      title: 'Minimalist Concrete Facade',
+      date: 'September 2026',
+      filename: 'photo-2',
+      hasPair: true,
+      editedUrl: 'images/fulls/photo-2-edited.jpg',
+      rawUrl: 'images/fulls/photo-2-raw.jpg',
+      thumbUrl: 'images/thumbs/photo-2.jpg',
+      aspectRatio: '3:2',
+      dimensions: { width: 1400, height: 935 },
+      exif: {
+        camera: 'Leica Q2',
+        model: 'Leica Q2',
+        lens: 'Summilux 28mm f/1.7 ASPH',
+        focalLength: '28mm',
+        aperture: 'f/5.6',
+        fNumber: '5.6',
+        shutterSpeed: '1/500s',
+        exposureTime: '1/500',
+        iso: '100',
+        isoSpeedRatings: 100
+      }
+    },
+    {
+      id: 'photo-3',
+      title: 'Golden Hour Coastline',
+      date: 'August 2026',
+      filename: 'photo-3',
+      hasPair: true,
+      editedUrl: 'images/fulls/photo-3-edited.jpg',
+      rawUrl: 'images/fulls/photo-3-raw.jpg',
+      thumbUrl: 'images/thumbs/photo-3.jpg',
+      aspectRatio: '3:2',
+      dimensions: { width: 1400, height: 931 },
+      exif: {
+        camera: 'Canon EOS R5',
+        model: 'Canon EOS R5',
+        lens: 'RF 24-105mm f/4L IS USM',
+        focalLength: '35mm',
+        aperture: 'f/8.0',
+        fNumber: '8.0',
+        shutterSpeed: '1/250s',
+        exposureTime: '1/250',
+        iso: '100',
+        isoSpeedRatings: 100
+      }
+    },
+    {
+      id: 'photo-4',
+      title: 'Monochrome Studio Portrait',
+      date: 'July 2026',
+      filename: 'photo-4',
+      hasPair: true,
+      editedUrl: 'images/fulls/photo-4-edited.jpg',
+      rawUrl: 'images/fulls/photo-4-raw.jpg',
+      thumbUrl: 'images/thumbs/photo-4.jpg',
+      aspectRatio: '4:5',
+      dimensions: { width: 1400, height: 1750 },
+      exif: {
+        camera: 'Fujifilm GFX 100S',
+        model: 'Fujifilm GFX 100S',
+        lens: 'GF 110mm f/2 R LM WR',
+        focalLength: '110mm',
+        aperture: 'f/2.0',
+        fNumber: '2.0',
+        shutterSpeed: '1/200s',
+        exposureTime: '1/200',
+        iso: '160',
+        isoSpeedRatings: 160
+      }
+    },
+    {
+      id: 'photo-5',
+      title: 'Midnight Tokyo Alley',
+      date: 'June 2026',
+      filename: 'photo-5',
+      hasPair: true,
+      editedUrl: 'images/fulls/photo-5-edited.jpg',
+      rawUrl: 'images/fulls/photo-5-raw.jpg',
+      thumbUrl: 'images/thumbs/photo-5.jpg',
+      aspectRatio: '2:3',
+      dimensions: { width: 1400, height: 2100 },
+      exif: {
+        camera: 'Sony Alpha 7S III',
+        model: 'Sony Alpha 7S III',
+        lens: 'FE 35mm f/1.4 GM',
+        focalLength: '35mm',
+        aperture: 'f/1.4',
+        fNumber: '1.4',
+        shutterSpeed: '1/60s',
+        exposureTime: '1/60',
+        iso: '1600',
+        isoSpeedRatings: 1600
+      }
+    },
+    {
+      id: 'photo-6',
+      title: 'Desert Dune Geometry',
+      date: 'May 2026',
+      filename: 'photo-6',
+      hasPair: true,
+      editedUrl: 'images/fulls/photo-6-edited.jpg',
+      rawUrl: 'images/fulls/photo-6-raw.jpg',
+      thumbUrl: 'images/thumbs/photo-6.jpg',
+      aspectRatio: '2:3',
+      dimensions: { width: 1400, height: 2100 },
+      exif: {
+        camera: 'Hasselblad X2D 100C',
+        model: 'Hasselblad X2D 100C',
+        lens: 'XCD 55mm f/2.5 V',
+        focalLength: '55mm',
+        aperture: 'f/8.0',
+        fNumber: '8.0',
+        shutterSpeed: '1/640s',
+        exposureTime: '1/640',
+        iso: '64',
+        isoSpeedRatings: 64
+      }
+    }
+  ];
 
-	  // EXIF data
-	  $image_img[0].addEventListener("load", function() {
-		EXIF.getData($image_img[0], function () {
-			exifDatas[$image_img.data('name')] = getExifDataMarkup(this);
-		});
-	  });
-	});
-  
-	// Poptrox.
-	$main.poptrox({
-	  baseZIndex: 20000,
-	  caption: function ($a) {
-		var $image_img = $a.children('img');
-		var data = exifDatas[$image_img.data('name')];
-		if (data === undefined) {
-			// EXIF data					
-			EXIF.getData($image_img[0], function () {
-				data = exifDatas[$image_img.data('name')] = getExifDataMarkup(this);
-			});
-		}
-		return data !== undefined ? '<p>' + data + '</p>' : ' ';
-	},
-	  fadeSpeed: 300,
-	  onPopupClose: function () {
-		$body.removeClass("modal-active");
-	  },
-	  onPopupOpen: function () {
-		$body.addClass("modal-active");
-	  },
-	  overlayOpacity: 0,
-	  popupCloserText: "",
-	  popupHeight: 150,
-	  popupLoaderText: "",
-	  popupSpeed: 300,
-	  popupWidth: 150,
-	  selector: ".thumb > a.image",
-	  usePopupCaption: true,
-	  usePopupCloser: true,
-	  usePopupDefaultStyling: false,
-	  usePopupForceClose: true,
-	  usePopupLoader: true,
-	  usePopupNav: true,
-	  windowMargin: 50,
-	});
-  
-	// Hack: Set margins to 0 when 'xsmall' activates.
-	breakpoints.on("<=xsmall", function () {
-	  $main[0]._poptrox.windowMargin = 0;
-	});
-  
-	breakpoints.on(">xsmall", function () {
-	  $main[0]._poptrox.windowMargin = 50;
-	});
-  
-	function getExifDataMarkup(img) {
-		var exif = $('#main').data('exif');
-		var template = '';
+  let photoCatalog = [...FALLBACK_PHOTOS];
+  let currentPhoto = null;
+  let isDragging = false;
+  let activePointerId = null;
+  let currentSplitPct = 50;
 
-		for (var current in exif) {
-			var current_data = exif[current];
-			var exif_data = EXIF.getTag(img, current_data['tag']);
-			if (typeof exif_data !== "undefined") {
-				template += '<i class="' + current_data['icon'] + '" aria-hidden="true"></i> ' + exif_data + '&nbsp;&nbsp;';
-			}
-		}
-		return template;
-	}
+  // DOM Elements
+  let lightboxEl = null;
+  let titleEl = null;
+  let closeBtn = null;
+  let prevBtn = null;
+  let nextBtn = null;
+  let sliderContainer = null;
+  let rawLayer = null;
+  let rawImg = null;
+  let editedLayer = null;
+  let editedImg = null;
+  let dividerHandle = null;
+  let badgeRaw = null;
+  let badgeEdited = null;
+  let exifContainer = null;
 
-  })(jQuery);
+  // 2. Remove is-preload on page load
+  window.addEventListener('load', () => {
+    window.setTimeout(() => {
+      document.body.classList.remove('is-preload');
+    }, 100);
+  });
+
+  // 3. Initialize Lightbox DOM
+  function createLightboxDOM() {
+    let existing = document.querySelector('.lightbox, .comparison-lightbox, #lightbox');
+    if (existing) {
+      lightboxEl = existing;
+    } else {
+      lightboxEl = document.createElement('div');
+      lightboxEl.id = 'lightbox';
+      lightboxEl.className = 'lightbox comparison-lightbox';
+      lightboxEl.setAttribute('role', 'dialog');
+      lightboxEl.setAttribute('aria-modal', 'true');
+      lightboxEl.setAttribute('aria-label', 'Photo comparison view');
+      lightboxEl.style.display = 'none';
+
+      lightboxEl.innerHTML = `
+        <h2 class="lightbox-title"></h2>
+        <button type="button" class="lightbox-close closer" aria-label="Close" title="Close (Esc)">✕</button>
+        <button type="button" class="nav-previous lightbox-prev" aria-label="Previous photo" title="Previous (Left Arrow)">‹</button>
+        <button type="button" class="nav-next lightbox-next" aria-label="Next photo" title="Next (Right Arrow)">›</button>
+
+        <div class="comparison-slider slider-container" data-slider>
+          <div class="layer-raw layer-bottom">
+            <img alt="Original RAW photo" />
+            <span class="slider-badge badge-raw">ORIGINAL (RAW)</span>
+          </div>
+          <div class="layer-edited layer-top clip-layer">
+            <img alt="Edited photo" />
+            <span class="slider-badge badge-edited">EDITED</span>
+          </div>
+          <div class="slider-divider slider-handle divider-handle drag-handle" role="slider" aria-label="Comparison split position" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50" tabindex="0"></div>
+        </div>
+
+        <div class="lightbox-exif exif-container exif-data photo-exif" aria-label="EXIF metadata"></div>
+      `;
+
+      document.body.appendChild(lightboxEl);
+    }
+
+    titleEl = lightboxEl.querySelector('.lightbox-title, .caption h2, .lightbox h2');
+    closeBtn = lightboxEl.querySelector('.lightbox-close, .closer, button.close, [aria-label="Close"]');
+    prevBtn = lightboxEl.querySelector('.nav-previous, .lightbox-prev');
+    nextBtn = lightboxEl.querySelector('.nav-next, .lightbox-next');
+    sliderContainer = lightboxEl.querySelector('.comparison-slider, .slider-container');
+    rawLayer = lightboxEl.querySelector('.layer-raw, .layer-bottom');
+    rawImg = rawLayer ? rawLayer.querySelector('img') : null;
+    editedLayer = lightboxEl.querySelector('.layer-edited, .layer-top, .clip-layer');
+    editedImg = editedLayer ? editedLayer.querySelector('img') : null;
+    dividerHandle = lightboxEl.querySelector('.slider-divider, .slider-handle, .divider-handle, .drag-handle');
+    badgeRaw = lightboxEl.querySelector('.badge-raw');
+    badgeEdited = lightboxEl.querySelector('.badge-edited');
+    exifContainer = lightboxEl.querySelector('.lightbox-exif, .exif-container, .exif-data, .photo-exif');
+
+    initPointerEvents();
+    initControls();
+  }
+
+  // 4. Split position manipulation
+  function setSplit(pct) {
+    currentSplitPct = pct;
+    const clampedPct = Math.max(0, Math.min(100, pct));
+    if (dividerHandle) {
+      dividerHandle.style.left = `${clampedPct}%`;
+      dividerHandle.setAttribute('aria-valuenow', Math.round(clampedPct).toString());
+    }
+    // Edited layer sits on top; clip from right so left portion shows edited.
+    // inset(top right bottom left) — clip the right side by (100-pct)%
+    if (editedLayer) {
+      editedLayer.style.clipPath = `inset(0 ${100 - clampedPct}% 0 0)`;
+    }
+  }
+
+
+  function updateSplitFromClientX(clientX) {
+    if (!sliderContainer) return;
+    const rect = sliderContainer.getBoundingClientRect();
+    if (rect.width <= 0) return;
+    let pct = ((clientX - rect.left) / rect.width) * 100;
+    pct = Math.max(0, Math.min(100, pct));
+    setSplit(pct);
+  }
+
+  // 5. Pointer Events handling
+  function initPointerEvents() {
+    if (!dividerHandle || !sliderContainer) return;
+
+    function onPointerDown(e) {
+      isDragging = true;
+      activePointerId = e.pointerId;
+      if (dividerHandle.setPointerCapture && e.pointerId !== undefined) {
+        try {
+          dividerHandle.setPointerCapture(e.pointerId);
+        } catch (_) {}
+      }
+      updateSplitFromClientX(e.clientX);
+    }
+
+    dividerHandle.addEventListener('pointerdown', onPointerDown);
+
+    // Window move listener tracks even when pointer moves outside element bounds
+    window.addEventListener('pointermove', (e) => {
+      if (!isDragging) return;
+      updateSplitFromClientX(e.clientX);
+    });
+
+    dividerHandle.addEventListener('pointermove', (e) => {
+      if (!isDragging) return;
+      updateSplitFromClientX(e.clientX);
+    });
+
+    function endDrag() {
+      if (!isDragging) return;
+      isDragging = false;
+      if (dividerHandle.releasePointerCapture && activePointerId !== null) {
+        try {
+          dividerHandle.releasePointerCapture(activePointerId);
+        } catch (_) {}
+      }
+      activePointerId = null;
+    }
+
+    window.addEventListener('pointerup', endDrag);
+    dividerHandle.addEventListener('pointerup', endDrag);
+
+    window.addEventListener('pointercancel', endDrag);
+    dividerHandle.addEventListener('pointercancel', endDrag);
+  }
+
+  // 6. Navigation & Lightbox Controls
+  function isLightboxOpen() {
+    return lightboxEl && (
+      lightboxEl.classList.contains('active') ||
+      lightboxEl.classList.contains('visible') ||
+      lightboxEl.style.display !== 'none'
+    );
+  }
+
+  function openLightbox() {
+    if (!lightboxEl) return;
+    if (document.activeElement && typeof document.activeElement.blur === 'function') {
+      try { document.activeElement.blur(); } catch (_) {}
+    }
+    lightboxEl.style.display = 'flex';
+    lightboxEl.classList.add('active', 'visible');
+    document.body.classList.add('lightbox-open');
+  }
+
+  function closeLightbox() {
+    if (!lightboxEl) return;
+    isDragging = false;
+    lightboxEl.classList.remove('active', 'visible');
+    lightboxEl.style.display = 'none';
+    document.body.classList.remove('lightbox-open');
+  }
+
+  function getActivePhotos() {
+    const thumbs = Array.from(document.querySelectorAll('#main article.thumb'));
+    const visibleThumbs = thumbs.filter(thumb => {
+      return window.getComputedStyle(thumb).display !== 'none' && !thumb.classList.contains('hidden');
+    });
+
+    if (visibleThumbs.length > 0) {
+      return visibleThumbs
+        .map(thumb => photoCatalog.find(p => p.id === thumb.dataset.photoId))
+        .filter(Boolean);
+    }
+    return photoCatalog;
+  }
+
+  function navigateNext() {
+    const activeList = getActivePhotos();
+    if (activeList.length === 0) return;
+    const currentIndex = activeList.findIndex(p => p.id === currentPhoto?.id);
+    const nextIndex = (currentIndex + 1) % activeList.length;
+    currentPhoto = activeList[nextIndex];
+    renderLightboxPhoto(currentPhoto);
+  }
+
+  function navigatePrev() {
+    const activeList = getActivePhotos();
+    if (activeList.length === 0) return;
+    const currentIndex = activeList.findIndex(p => p.id === currentPhoto?.id);
+    const prevIndex = (currentIndex - 1 + activeList.length) % activeList.length;
+    currentPhoto = activeList[prevIndex];
+    renderLightboxPhoto(currentPhoto);
+  }
+
+  function initControls() {
+    if (closeBtn) {
+      closeBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        closeLightbox();
+      });
+    }
+
+    if (prevBtn) {
+      prevBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        navigatePrev();
+      });
+    }
+
+    if (nextBtn) {
+      nextBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        navigateNext();
+      });
+    }
+
+    // Close on backdrop click (outside slider & controls)
+    lightboxEl.addEventListener('click', (e) => {
+      if (e.target === lightboxEl) {
+        closeLightbox();
+      }
+    });
+
+    // Global keyboard navigation
+    window.addEventListener('keydown', (e) => {
+      if (!isLightboxOpen()) return;
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        closeLightbox();
+      } else if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        navigateNext();
+      } else if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        navigatePrev();
+      }
+    });
+  }
+
+  // 7. Render photo into lightbox
+  function renderLightboxPhoto(photo) {
+    if (!photo) return;
+    currentPhoto = photo;
+
+    if (!lightboxEl) {
+      createLightboxDOM();
+    }
+
+    // Update Title
+    if (titleEl) {
+      titleEl.textContent = photo.title || '';
+    }
+
+    // Update EXIF metadata
+    if (exifContainer) {
+      const exif = photo.exif || {};
+      const items = [];
+
+      if (exif.camera || exif.model) {
+        items.push(`<span class="exif-item exif-camera"><i class="fa fa-camera" aria-hidden="true"></i> ${exif.camera || exif.model}</span>`);
+      }
+      if (exif.lens) {
+        items.push(`<span class="exif-item exif-lens"><i class="fa fa-dot-circle" aria-hidden="true"></i> ${exif.lens}</span>`);
+      }
+      if (exif.aperture || exif.fNumber) {
+        const ap = exif.aperture || `f/${exif.fNumber}`;
+        items.push(`<span class="exif-item exif-aperture">${ap}</span>`);
+      }
+      if (exif.shutterSpeed || exif.exposureTime) {
+        const ss = exif.shutterSpeed || `${exif.exposureTime}s`;
+        items.push(`<span class="exif-item exif-shutter">${ss}</span>`);
+      }
+      if (exif.iso || exif.isoSpeedRatings) {
+        const isoVal = exif.iso || exif.isoSpeedRatings;
+        items.push(`<span class="exif-item exif-iso">ISO ${isoVal}</span>`);
+      }
+
+      exifContainer.innerHTML = items.join('');
+    }
+
+    // Single-photo fallback vs Paired comparison
+    const hasPair = photo.hasPair !== false && !!photo.rawUrl && !!photo.editedUrl;
+
+    if (!hasPair) {
+      // Single photo view
+      if (dividerHandle) dividerHandle.style.display = 'none';
+      if (rawLayer) rawLayer.style.display = 'none';
+      if (badgeRaw) badgeRaw.style.display = 'none';
+      if (badgeEdited) badgeEdited.style.display = 'none';
+      if (editedLayer) {
+        editedLayer.style.clipPath = 'none';
+      }
+      if (editedImg) {
+        editedImg.src = photo.editedUrl || photo.rawUrl || photo.url || '';
+        editedImg.alt = photo.title || 'Photo';
+      }
+    } else {
+      // Comparison slider view
+      if (dividerHandle) dividerHandle.style.display = '';
+      if (rawLayer) rawLayer.style.display = '';
+      if (badgeRaw) badgeRaw.style.display = '';
+      if (badgeEdited) badgeEdited.style.display = '';
+      if (rawImg) {
+        rawImg.src = photo.rawUrl;
+        rawImg.alt = `${photo.title} (RAW)`;
+      }
+      if (editedImg) {
+        editedImg.src = photo.editedUrl;
+        editedImg.alt = `${photo.title} (Edited)`;
+      }
+      setSplit(50);
+    }
+  }
+
+  // Expose renderLightboxPhoto and photoCatalog on window for automated verification
+  window.renderLightboxPhoto = renderLightboxPhoto;
+  window.photoCatalog = photoCatalog;
+
+  // 8. Gallery Grid Event Binding
+  function bindGalleryEvents() {
+    const thumbs = Array.from(document.querySelectorAll('#main article.thumb'));
+    thumbs.forEach((thumb, index) => {
+      // Attach photo-id
+      const photo = photoCatalog[index] || photoCatalog.find(p => {
+        const img = thumb.querySelector('img');
+        const h2 = thumb.querySelector('h2');
+        return (img && img.src.includes(p.filename)) || (h2 && h2.textContent.trim() === p.title);
+      });
+
+      if (photo) {
+        thumb.dataset.photoId = photo.id;
+      }
+
+      function handleOpen(e) {
+        if (e) {
+          e.preventDefault();
+          e.stopPropagation();
+        }
+        const pId = thumb.dataset.photoId;
+        const matched = photoCatalog.find(p => p.id === pId) || photo;
+        if (matched) {
+          renderLightboxPhoto(matched);
+          openLightbox();
+        }
+      }
+
+      const link = thumb.querySelector('a');
+      if (link) {
+        link.addEventListener('click', handleOpen);
+      }
+
+      thumb.addEventListener('click', handleOpen);
+    });
+
+    // Delegated click handler on document to guarantee any thumb / anchor click is prevented and handled
+    if (!window.__delegatedClickBound) {
+      window.__delegatedClickBound = true;
+      document.addEventListener('click', (e) => {
+        const thumb = e.target.closest('#main article.thumb');
+        if (thumb) {
+          e.preventDefault();
+          const pId = thumb.dataset.photoId;
+          const matched = photoCatalog.find(p => p.id === pId) || photoCatalog[0];
+          if (matched) {
+            renderLightboxPhoto(matched);
+            openLightbox();
+          }
+        }
+      });
+    }
+  }
+
+  // 9. Real-Time Search Filtering
+  function initSearch() {
+    const searchInput = document.getElementById('photo-search');
+    const emptyState = document.getElementById('empty-state');
+
+    function filterPhotos(query) {
+      const q = (query || '').trim().toLowerCase();
+      let matchCount = 0;
+      const thumbs = Array.from(document.querySelectorAll('#main article.thumb'));
+
+      thumbs.forEach((thumb, index) => {
+        const photoId = thumb.dataset.photoId;
+        const photo = (photoId ? photoCatalog.find(p => p.id === photoId) : null)
+          || photoCatalog[index]
+          || photoCatalog.find(p => {
+               const img = thumb.querySelector('img');
+               const h2 = thumb.querySelector('h2');
+               return (img && img.src.includes(p.filename)) || (h2 && h2.textContent.trim() === p.title);
+             });
+        if (!photo) return;
+
+        if (!q) {
+          thumb.style.display = '';
+          thumb.classList.remove('hidden');
+          matchCount++;
+          return;
+        }
+
+        const titleMatch = (photo.title || '').toLowerCase().includes(q);
+        const dateMatch = (photo.date || '').toLowerCase().includes(q);
+        const fileMatch = (photo.filename || '').toLowerCase().includes(q);
+        const pText = (thumb.querySelector('p')?.textContent || '').toLowerCase().includes(q);
+        const h2Text = (thumb.querySelector('h2')?.textContent || '').toLowerCase().includes(q);
+        const exif = photo.exif || {};
+        const cameraMatch = (exif.camera || '').toLowerCase().includes(q);
+        const modelMatch = (exif.model || '').toLowerCase().includes(q);
+        const lensMatch = (exif.lens || '').toLowerCase().includes(q);
+        const apertureMatch = (exif.aperture || '').toLowerCase().includes(q) || (exif.fNumber || '').toString().toLowerCase().includes(q);
+        const shutterMatch = (exif.shutterSpeed || '').toLowerCase().includes(q) || (exif.exposureTime || '').toLowerCase().includes(q);
+        const isoMatch = (exif.iso || '').toString().toLowerCase().includes(q) || (exif.isoSpeedRatings || '').toString().toLowerCase().includes(q);
+
+        const matches = titleMatch || dateMatch || fileMatch || pText || h2Text || cameraMatch || modelMatch || lensMatch || apertureMatch || shutterMatch || isoMatch;
+
+        if (matches) {
+          thumb.style.display = '';
+          thumb.classList.remove('hidden');
+          matchCount++;
+        } else {
+          thumb.style.display = 'none';
+          thumb.classList.add('hidden');
+        }
+      });
+
+      if (emptyState) {
+        if (matchCount === 0 && q) {
+          emptyState.style.display = 'block';
+          emptyState.classList.remove('hidden');
+        } else {
+          emptyState.style.display = 'none';
+          emptyState.classList.add('hidden');
+        }
+      }
+    }
+
+    if (searchInput) {
+      searchInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+        }
+      });
+      searchInput.addEventListener('input', (e) => filterPhotos(e.target.value));
+      searchInput.addEventListener('keyup', (e) => filterPhotos(e.target.value));
+      searchInput.addEventListener('change', (e) => filterPhotos(e.target.value));
+    }
+  }
+
+  // 10. Catalog Hydration
+  async function loadPhotoCatalog() {
+    try {
+      const response = await fetch('data/photos.json');
+      if (response.ok) {
+        const data = await response.json();
+        if (Array.isArray(data) && data.length > 0) {
+          photoCatalog = data;
+          window.photoCatalog = photoCatalog;
+        }
+      }
+    } catch (_) {
+      // Local preview / offline fallback to embedded catalog
+      photoCatalog = [...FALLBACK_PHOTOS];
+      window.photoCatalog = photoCatalog;
+    }
+  }
+
+  function preloadImages() {
+    photoCatalog.forEach(photo => {
+      if (photo.rawUrl) {
+        const r = new Image();
+        r.src = photo.rawUrl;
+      }
+      if (photo.editedUrl) {
+        const e = new Image();
+        e.src = photo.editedUrl;
+      }
+    });
+  }
+
+  // 11. Application Bootstrap (synchronous initial binding followed by async hydration)
+  async function bootstrap() {
+    createLightboxDOM();
+    bindGalleryEvents();
+    initSearch();
+    await loadPhotoCatalog();
+    bindGalleryEvents();
+    preloadImages();
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', bootstrap);
+  } else {
+    bootstrap();
+  }
+
+})();

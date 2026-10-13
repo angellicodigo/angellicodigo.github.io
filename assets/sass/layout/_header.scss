@@ -49,45 +49,59 @@
 			}
 		}
 
-		nav {
+		.search-box {
+			align-items: center;
+			display: flex;
+			height: _size(header);
 			position: absolute;
-			right: 0;
+			right: 1.5em;
 			top: 0;
+			width: 250px;
 
-			> ul {
-				list-style: none;
-				margin: 0;
-				padding: 0;
+			.search-icon {
+				color: _palette(fg-light);
+				font-size: 0.9em;
+				left: 0.85em;
+				line-height: 1;
+				pointer-events: none;
+				position: absolute;
+				z-index: 1;
+			}
 
-				> li {
-					display: inline-block;
-					padding: 0;
+			input[type="text"],
+			#photo-search {
+				background: transparentize(_palette(bg), 0.5);
+				border: solid 1px _palette(border);
+				border-radius: 4px;
+				box-sizing: border-box;
+				color: _palette(fg-bold);
+				font-family: _font(family);
+				font-size: 0.85em;
+				font-weight: _font(weight);
+				height: 2.25em;
+				line-height: 2.25em;
+				outline: none;
+				padding-left: 2.4em;
+				padding-right: 0.75em;
+				transition: border-color #{_duration(transition)} ease, background-color #{_duration(transition)} ease;
+				width: 100%;
 
-					a {
-						@include vendor('transition', 'background-color #{_duration(panel)} ease');
-						border: 0;
-						color: _palette(fg-bold);
-						display: inline-block;
-						letter-spacing: _font(kerning-alt);
-						padding: 0 1.65em;
-						text-transform: uppercase;
+				&::-webkit-search-decoration,
+				&::-webkit-search-cancel-button,
+				&::-webkit-search-results-button,
+				&::-webkit-search-results-decoration {
+					display: none;
+					-webkit-appearance: none;
+				}
 
-						&.icon {
-							&:before {
-								color: _palette(fg-light);
-								float: right;
-								margin-left: 0.75em;
-							}
-						}
+				&::placeholder {
+					color: _palette(fg-medium);
+					opacity: 1;
+				}
 
-						&:hover {
-							color: _palette(fg-bold) !important;
-						}
-
-						&.active {
-							background-color: _palette(bg);
-						}
-					}
+				&:focus {
+					background: _palette(bg);
+					border-color: _palette(accent1);
 				}
 			}
 		}
@@ -113,14 +127,16 @@
 				font-size: 0.9em;
 			}
 
-			nav {
-				> ul {
-					> li {
-						a {
-							font-size: 0.9em;
-							padding: 0 1.15em;
-						}
-					}
+			.search-box {
+				right: 1em;
+				width: 200px;
+
+				input[type="text"],
+				#photo-search {
+					font-size: 0.8em;
+					height: 2em;
+					line-height: 2em;
+					padding-left: 2.2em;
 				}
 			}
 		}

@@ -1,0 +1,164 @@
+[
+  {
+    "id": "photo-1",
+    "title": "Misty Alpine Forest",
+    "date": "October 2026",
+    "filename": "photo-1",
+    "hasPair": true,
+    "editedUrl": "images/fulls/photo-1-edited.jpg",
+    "rawUrl": "images/fulls/photo-1-raw.jpg",
+    "thumbUrl": "images/thumbs/photo-1.jpg",
+    "aspectRatio": "3:2",
+    "dimensions": {
+      "width": 1400,
+      "height": 933
+    },
+    "exif": {
+      "camera": "Sony Alpha 7 IV",
+      "model": "Sony Alpha 7 IV",
+      "lens": "FE 24-70mm f/2.8 GM II",
+      "focalLength": "45mm",
+      "aperture": "f/4.0",
+      "fNumber": "4.0",
+      "shutterSpeed": "1/160s",
+      "exposureTime": "1/160",
+      "iso": "100",
+      "isoSpeedRatings": 100
+    }
+  },
+  {
+    "id": "photo-2",
+    "title": "Minimalist Concrete Facade",
+    "date": "September 2026",
+    "filename": "photo-2",
+    "hasPair": true,
+    "editedUrl": "images/fulls/photo-2-edited.jpg",
+    "rawUrl": "images/fulls/photo-2-raw.jpg",
+    "thumbUrl": "images/thumbs/photo-2.jpg",
+    "aspectRatio": "3:2",
+    "dimensions": {
+      "width": 1400,
+      "height": 935
+    },
+    "exif": {
+      "camera": "Leica Q2",
+      "model": "Leica Q2",
+      "lens": "Summilux 28mm f/1.7 ASPH",
+      "focalLength": "28mm",
+      "aperture": "f/5.6",
+      "fNumber": "5.6",
+      "shutterSpeed": "1/500s",
+      "exposureTime": "1/500",
+      "iso": "100",
+      "isoSpeedRatings": 100
+    }
+  },
+  {
+    "id": "photo-3",
+    "title": "Golden Hour Coastline",
+    "date": "August 2026",
+    "filename": "photo-3",
+    "hasPair": true,
+    "editedUrl": "images/fulls/photo-3-edited.jpg",
+    "rawUrl": "images/fulls/photo-3-raw.jpg",
+    "thumbUrl": "images/thumbs/photo-3.jpg",
+    "aspectRatio": "3:2",
+    "dimensions": {
+      "width": 1400,
+      "height": 931
+    },
+    "exif": {
+      "camera": "Canon EOS R5",
+      "model": "Canon EOS R5",
+      "lens": "RF 24-105mm f/4L IS USM",
+      "focalLength": "35mm",
+      "aperture": "f/8.0",
+      "fNumber": "8.0",
+      "shutterSpeed": "1/250s",
+      "exposureTime": "1/250",
+      "iso": "100",
+      "isoSpeedRatings": 100
+    }
+  },
+  {
+    "id": "photo-4",
+    "title": "Monochrome Studio Portrait",
+    "date": "July 2026",
+    "filename": "photo-4",
+    "hasPair": true,
+    "editedUrl": "images/fulls/photo-4-edited.jpg",
+    "rawUrl": "images/fulls/photo-4-raw.jpg",
+    "thumbUrl": "images/thumbs/photo-4.jpg",
+    "aspectRatio": "4:5",
+    "dimensions": {
+      "width": 1400,
+      "height": 1750
+    },
+    "exif": {
+      "camera": "Fujifilm GFX 100S",
+      "model": "Fujifilm GFX 100S",
+      "lens": "GF 110mm f/2 R LM WR",
+      "focalLength": "110mm",
+      "aperture": "f/2.0",
+      "fNumber": "2.0",
+      "shutterSpeed": "1/200s",
+      "exposureTime": "1/200",
+      "iso": "160",
+      "isoSpeedRatings": 160
+    }
+  },
+  {
+    "id": "photo-5",
+    "title": "Midnight Tokyo Alley",
+    "date": "June 2026",
+    "filename": "photo-5",
+    "hasPair": true,
+    "editedUrl": "images/fulls/photo-5-edited.jpg",
+    "rawUrl": "images/fulls/photo-5-raw.jpg",
+    "thumbUrl": "images/thumbs/photo-5.jpg",
+    "aspectRatio": "2:3",
+    "dimensions": {
+      "width": 1400,
+      "height": 2100
+    },
+    "exif": {
+      "camera": "Sony Alpha 7S III",
+      "model": "Sony Alpha 7S III",
+      "lens": "FE 35mm f/1.4 GM",
+      "focalLength": "35mm",
+      "aperture": "f/1.4",
+      "fNumber": "1.4",
+      "shutterSpeed": "1/60s",
+      "exposureTime": "1/60",
+      "iso": "1600",
+      "isoSpeedRatings": 1600
+    }
+  },
+  {
+    "id": "photo-6",
+    "title": "Desert Dune Geometry",
+    "date": "May 2026",
+    "filename": "photo-6",
+    "hasPair": true,
+    "editedUrl": "images/fulls/photo-6-edited.jpg",
+    "rawUrl": "images/fulls/photo-6-raw.jpg",
+    "thumbUrl": "images/thumbs/photo-6.jpg",
+    "aspectRatio": "2:3",
+    "dimensions": {
+      "width": 1400,
+      "height": 2100
+    },
+    "exif": {
+      "camera": "Hasselblad X2D 100C",
+      "model": "Hasselblad X2D 100C",
+      "lens": "XCD 55mm f/2.5 V",
+      "focalLength": "55mm",
+      "aperture": "f/8.0",
+      "fNumber": "8.0",
+      "shutterSpeed": "1/640s",
+      "exposureTime": "1/640",
+      "iso": "64",
+      "isoSpeedRatings": 64
+    }
+  }
+]

@@ -1,38 +1,15 @@
 {
-  "name": "photography",
+  "name": "fotografias",
   "version": "5.0.0",
-  "description": "A jekyll website for photographer cum developer",
-  "main": "npmfile.js",
+  "description": "Photography portfolio website template",
+  "private": true,
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build:css": "sass assets/sass/main.scss:assets/css/main.min.css assets/sass/custom.scss:assets/css/custom.min.css assets/sass/noscript.scss:assets/css/noscript.min.css --style=compressed --no-source-map --quiet",
+    "watch:css": "sass assets/sass/main.scss:assets/css/main.min.css assets/sass/custom.scss:assets/css/custom.min.css assets/sass/noscript.scss:assets/css/noscript.min.css --style=compressed --no-source-map --quiet --watch",
+    "build": "npm run build:css",
+    "test": "npm run build"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/rampatra/photography.git"
-  },
-  "keywords": [
-    "photography",
-    "jekyll",
-    "website",
-    "template",
-    "website template",
-    "portfolio",
-    "portfolio website"
-  ],
-  "author": "Ram Patra",
-  "license": "GPL-3.0",
-  "bugs": {
-    "url": "https://github.com/rampatra/photography/issues"
-  },
-  "homepage": "https://github.com/rampatra/photography#readme",
   "devDependencies": {
-    "del": "^4.1.1",
-    "gulp": "^4.0.2",
-    "gulp-filter": "^9.0.1",
-    "gulp-image-resize": "^0.13.1",
-    "gulp-rename": "^1.4.0",
-    "gulp-sass": "^5.0.0",
-    "gulp-uglify": "^3.0.0",
-    "sass": "^1.25.0"
+    "sass": "^1.85.0"
   }
 }
