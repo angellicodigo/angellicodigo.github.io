@@ -545,9 +545,6 @@
       if (exif.camera || exif.model) {
         items.push(`<span class="exif-item exif-camera"><i class="fa fa-camera" aria-hidden="true"></i> ${exif.camera || exif.model}</span>`);
       }
-      if (exif.lens) {
-        items.push(`<span class="exif-item exif-lens"><i class="fa fa-dot-circle" aria-hidden="true"></i> ${exif.lens}</span>`);
-      }
       if (exif.aperture || exif.fNumber) {
         const ap = exif.aperture || `f/${exif.fNumber}`;
         items.push(`<span class="exif-item exif-aperture">${ap}</span>`);
