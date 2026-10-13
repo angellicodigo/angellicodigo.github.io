@@ -19,7 +19,6 @@
   const FALLBACK_PHOTOS = [
     {
       id: 'photo-1',
-      title: 'Misty Alpine Forest',
       date: 'October 2026',
       filename: 'photo-1',
       hasPair: true,
@@ -43,7 +42,6 @@
     },
     {
       id: 'photo-2',
-      title: 'Minimalist Concrete Facade',
       date: 'September 2026',
       filename: 'photo-2',
       hasPair: true,
@@ -67,7 +65,6 @@
     },
     {
       id: 'photo-3',
-      title: 'Golden Hour Coastline',
       date: 'August 2026',
       filename: 'photo-3',
       hasPair: true,
@@ -91,7 +88,6 @@
     },
     {
       id: 'photo-4',
-      title: 'Monochrome Studio Portrait',
       date: 'July 2026',
       filename: 'photo-4',
       hasPair: true,
@@ -115,7 +111,6 @@
     },
     {
       id: 'photo-5',
-      title: 'Midnight Tokyo Alley',
       date: 'June 2026',
       filename: 'photo-5',
       hasPair: true,
@@ -139,12 +134,10 @@
     },
     {
       id: 'photo-6',
-      title: 'Desert Dune Geometry',
       date: 'May 2026',
       filename: 'photo-6',
-      hasPair: true,
+      hasPair: false,
       editedUrl: 'images/fulls/photo-6-edited.jpg',
-      rawUrl: 'images/fulls/photo-6-raw.jpg',
       thumbUrl: 'images/thumbs/photo-6.jpg',
       aspectRatio: '2:3',
       dimensions: { width: 1400, height: 2100 },
@@ -168,10 +161,10 @@
   let isDragging = false;
   let activePointerId = null;
   let currentSplitPct = 50;
+  let isSliderActive = false;
 
   // DOM Elements
   let lightboxEl = null;
-  let titleEl = null;
   let closeBtn = null;
   let prevBtn = null;
   let nextBtn = null;
@@ -184,12 +177,97 @@
   let badgeRaw = null;
   let badgeEdited = null;
   let exifContainer = null;
+  let sliderToggleBtn = null;
+  let sliderToggleText = null;
 
   // 2. Remove is-preload on page load
   window.addEventListener('load', () => {
     window.setTimeout(() => {
       document.body.classList.remove('is-preload');
     }, 100);
+  });
+
+  // Fit comparison slider container precisely to the image aspect ratio
+  function fitSliderToPhoto(photo) {
+    if (!sliderContainer || !photo) return;
+    const maxW = Math.min(window.innerWidth * 0.85, 1200);
+    const maxH = Math.min(window.innerHeight * 0.78, 800);
+
+    let w = photo.dimensions?.width;
+    let h = photo.dimensions?.height;
+
+    if (!w || !h) {
+      if (editedImg && editedImg.naturalWidth && editedImg.naturalHeight) {
+        w = editedImg.naturalWidth;
+        h = editedImg.naturalHeight;
+      } else {
+        w = 1400;
+        h = 933;
+      }
+    }
+
+    const photoRatio = w / h;
+    const availRatio = maxW / maxH;
+
+    let fitW, fitH;
+    if (photoRatio > availRatio) {
+      fitW = maxW;
+      fitH = maxW / photoRatio;
+    } else {
+      fitH = maxH;
+      fitW = maxH * photoRatio;
+    }
+
+    sliderContainer.style.width = `${Math.round(fitW)}px`;
+    sliderContainer.style.height = `${Math.round(fitH)}px`;
+    sliderContainer.style.aspectRatio = `${w} / ${h}`;
+  }
+
+  // Toggle slider active state
+  function setSliderActive(active) {
+    isSliderActive = !!active;
+    if (dividerHandle) {
+      dividerHandle.style.left = '50%';
+      dividerHandle.setAttribute('aria-valuenow', '50');
+    }
+    if (isSliderActive) {
+      if (sliderToggleBtn) {
+        sliderToggleBtn.classList.add('active');
+        if (sliderToggleText) sliderToggleText.textContent = 'Hide Slider';
+      }
+      if (sliderContainer) {
+        sliderContainer.classList.remove('slider-hidden');
+      }
+      if (rawLayer) rawLayer.style.display = '';
+      if (dividerHandle) dividerHandle.style.display = '';
+      if (badgeRaw) badgeRaw.style.display = '';
+      if (badgeEdited) badgeEdited.style.display = '';
+      setSplit(50);
+    } else {
+      if (sliderToggleBtn) {
+        sliderToggleBtn.classList.remove('active');
+        if (sliderToggleText) sliderToggleText.textContent = 'Use Slider';
+      }
+      if (sliderContainer) {
+        sliderContainer.classList.add('slider-hidden');
+      }
+      if (rawLayer) rawLayer.style.display = 'none';
+      if (dividerHandle) dividerHandle.style.display = 'none';
+      if (badgeRaw) badgeRaw.style.display = 'none';
+      if (badgeEdited) badgeEdited.style.display = 'none';
+      if (editedLayer) editedLayer.style.clipPath = 'none';
+    }
+  }
+
+  function toggleSlider() {
+    setSliderActive(!isSliderActive);
+  }
+
+  // Window resize keeps slider container matched to photo area
+  window.addEventListener('resize', () => {
+    if (isLightboxOpen() && currentPhoto) {
+      fitSliderToPhoto(currentPhoto);
+    }
   });
 
   // 3. Initialize Lightbox DOM
@@ -207,12 +285,15 @@
       lightboxEl.style.display = 'none';
 
       lightboxEl.innerHTML = `
-        <h2 class="lightbox-title"></h2>
+        <button type="button" class="slider-toggle-btn" id="slider-toggle-btn" aria-label="Use or hide slider">
+          <i class="fa fa-sliders-h" aria-hidden="true"></i>
+          <span class="slider-toggle-text">Use Slider</span>
+        </button>
         <button type="button" class="lightbox-close closer" aria-label="Close" title="Close (Esc)">✕</button>
         <button type="button" class="nav-previous lightbox-prev" aria-label="Previous photo" title="Previous (Left Arrow)">‹</button>
         <button type="button" class="nav-next lightbox-next" aria-label="Next photo" title="Next (Right Arrow)">›</button>
 
-        <div class="comparison-slider slider-container" data-slider>
+        <div class="comparison-slider slider-container slider-hidden" data-slider>
           <div class="layer-raw layer-bottom">
             <img alt="Original RAW photo" />
             <span class="slider-badge badge-raw">ORIGINAL (RAW)</span>
@@ -221,7 +302,7 @@
             <img alt="Edited photo" />
             <span class="slider-badge badge-edited">EDITED</span>
           </div>
-          <div class="slider-divider slider-handle divider-handle drag-handle" role="slider" aria-label="Comparison split position" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50" tabindex="0"></div>
+          <div class="slider-divider slider-handle divider-handle drag-handle" style="left: 50%;" role="slider" aria-label="Comparison split position" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50" tabindex="0"></div>
         </div>
 
         <div class="lightbox-exif exif-container exif-data photo-exif" aria-label="EXIF metadata"></div>
@@ -230,7 +311,8 @@
       document.body.appendChild(lightboxEl);
     }
 
-    titleEl = lightboxEl.querySelector('.lightbox-title, .caption h2, .lightbox h2');
+    sliderToggleBtn = lightboxEl.querySelector('.slider-toggle-btn, #slider-toggle-btn');
+    sliderToggleText = lightboxEl.querySelector('.slider-toggle-text');
     closeBtn = lightboxEl.querySelector('.lightbox-close, .closer, button.close, [aria-label="Close"]');
     prevBtn = lightboxEl.querySelector('.nav-previous, .lightbox-prev');
     nextBtn = lightboxEl.querySelector('.nav-next, .lightbox-next');
@@ -243,6 +325,17 @@
     badgeRaw = lightboxEl.querySelector('.badge-raw');
     badgeEdited = lightboxEl.querySelector('.badge-edited');
     exifContainer = lightboxEl.querySelector('.lightbox-exif, .exif-container, .exif-data, .photo-exif');
+
+    if (dividerHandle) {
+      dividerHandle.style.left = '50%';
+    }
+
+    if (sliderToggleBtn) {
+      sliderToggleBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        toggleSlider();
+      });
+    }
 
     initPointerEvents();
     initControls();
@@ -257,12 +350,14 @@
       dividerHandle.setAttribute('aria-valuenow', Math.round(clampedPct).toString());
     }
     // Edited layer sits on top; clip from right so left portion shows edited.
-    // inset(top right bottom left) — clip the right side by (100-pct)%
     if (editedLayer) {
-      editedLayer.style.clipPath = `inset(0 ${100 - clampedPct}% 0 0)`;
+      if (isSliderActive) {
+        editedLayer.style.clipPath = `inset(0 ${100 - clampedPct}% 0 0)`;
+      } else {
+        editedLayer.style.clipPath = 'none';
+      }
     }
   }
-
 
   function updateSplitFromClientX(clientX) {
     if (!sliderContainer) return;
@@ -278,6 +373,9 @@
     if (!dividerHandle || !sliderContainer) return;
 
     function onPointerDown(e) {
+      if (!isSliderActive && currentPhoto && currentPhoto.hasPair) {
+        setSliderActive(true);
+      }
       isDragging = true;
       activePointerId = e.pointerId;
       if (dividerHandle.setPointerCapture && e.pointerId !== undefined) {
@@ -344,6 +442,10 @@
     lightboxEl.classList.remove('active', 'visible');
     lightboxEl.style.display = 'none';
     document.body.classList.remove('lightbox-open');
+    if (dividerHandle) {
+      dividerHandle.style.left = '50%';
+      dividerHandle.setAttribute('aria-valuenow', '50');
+    }
   }
 
   function getActivePhotos() {
@@ -432,10 +534,8 @@
       createLightboxDOM();
     }
 
-    // Update Title
-    if (titleEl) {
-      titleEl.textContent = photo.title || '';
-    }
+    // Exact sizing to fit photo aspect ratio so slider cannot leave photo area
+    fitSliderToPhoto(photo);
 
     // Update EXIF metadata
     if (exifContainer) {
@@ -460,46 +560,55 @@
         const isoVal = exif.iso || exif.isoSpeedRatings;
         items.push(`<span class="exif-item exif-iso">ISO ${isoVal}</span>`);
       }
+      if (photo.date) {
+        items.push(`<span class="exif-item exif-date"><i class="fa fa-calendar-alt" aria-hidden="true"></i> ${photo.date}</span>`);
+      }
 
       exifContainer.innerHTML = items.join('');
     }
 
     // Single-photo fallback vs Paired comparison
-    const hasPair = photo.hasPair !== false && !!photo.rawUrl && !!photo.editedUrl;
+    const hasPair = photo.hasPair === true && !!photo.rawUrl && !!photo.editedUrl;
 
     if (!hasPair) {
-      // Single photo view
-      if (dividerHandle) dividerHandle.style.display = 'none';
-      if (rawLayer) rawLayer.style.display = 'none';
-      if (badgeRaw) badgeRaw.style.display = 'none';
-      if (badgeEdited) badgeEdited.style.display = 'none';
-      if (editedLayer) {
-        editedLayer.style.clipPath = 'none';
+      // Single photo view (no paired version exists)
+      if (sliderToggleBtn) sliderToggleBtn.style.display = 'none';
+      const singleUrl = photo.editedUrl || photo.rawUrl || photo.url || '';
+      if (rawImg) {
+        rawImg.src = singleUrl;
+        rawImg.alt = 'Photograph';
       }
       if (editedImg) {
-        editedImg.src = photo.editedUrl || photo.rawUrl || photo.url || '';
-        editedImg.alt = photo.title || 'Photo';
+        editedImg.src = singleUrl;
+        editedImg.alt = 'Photograph';
+        editedImg.onload = () => {
+          if (currentPhoto === photo) fitSliderToPhoto(photo);
+        };
       }
+      setSliderActive(false);
     } else {
-      // Comparison slider view
-      if (dividerHandle) dividerHandle.style.display = '';
-      if (rawLayer) rawLayer.style.display = '';
-      if (badgeRaw) badgeRaw.style.display = '';
-      if (badgeEdited) badgeEdited.style.display = '';
+      // Comparison view available; defaults to the edited version
+      if (sliderToggleBtn) sliderToggleBtn.style.display = 'inline-flex';
       if (rawImg) {
         rawImg.src = photo.rawUrl;
-        rawImg.alt = `${photo.title} (RAW)`;
+        rawImg.alt = 'Original RAW photo';
       }
       if (editedImg) {
         editedImg.src = photo.editedUrl;
-        editedImg.alt = `${photo.title} (Edited)`;
+        editedImg.alt = 'Edited photo';
+        editedImg.onload = () => {
+          if (currentPhoto === photo) fitSliderToPhoto(photo);
+        };
       }
-      setSplit(50);
+      setSliderActive(false);
     }
   }
 
-  // Expose renderLightboxPhoto and photoCatalog on window for automated verification
+  // Expose renderLightboxPhoto, setSliderActive, and photoCatalog on window for automated verification
   window.renderLightboxPhoto = renderLightboxPhoto;
+  window.setSliderActive = setSliderActive;
+  window.toggleSlider = toggleSlider;
+  window.fitSliderToPhoto = fitSliderToPhoto;
   window.photoCatalog = photoCatalog;
 
   // 8. Gallery Grid Event Binding
@@ -509,9 +618,8 @@
       // Attach photo-id
       const photo = photoCatalog[index] || photoCatalog.find(p => {
         const img = thumb.querySelector('img');
-        const h2 = thumb.querySelector('h2');
-        return (img && img.src.includes(p.filename)) || (h2 && h2.textContent.trim() === p.title);
-      });
+        return img && img.src.includes(p.filename);
+      }) || photoCatalog[index];
 
       if (photo) {
         thumb.dataset.photoId = photo.id;
@@ -572,8 +680,7 @@
           || photoCatalog[index]
           || photoCatalog.find(p => {
                const img = thumb.querySelector('img');
-               const h2 = thumb.querySelector('h2');
-               return (img && img.src.includes(p.filename)) || (h2 && h2.textContent.trim() === p.title);
+               return img && img.src.includes(p.filename);
              });
         if (!photo) return;
 
@@ -584,11 +691,9 @@
           return;
         }
 
-        const titleMatch = (photo.title || '').toLowerCase().includes(q);
         const dateMatch = (photo.date || '').toLowerCase().includes(q);
         const fileMatch = (photo.filename || '').toLowerCase().includes(q);
         const pText = (thumb.querySelector('p')?.textContent || '').toLowerCase().includes(q);
-        const h2Text = (thumb.querySelector('h2')?.textContent || '').toLowerCase().includes(q);
         const exif = photo.exif || {};
         const cameraMatch = (exif.camera || '').toLowerCase().includes(q);
         const modelMatch = (exif.model || '').toLowerCase().includes(q);
@@ -597,7 +702,7 @@
         const shutterMatch = (exif.shutterSpeed || '').toLowerCase().includes(q) || (exif.exposureTime || '').toLowerCase().includes(q);
         const isoMatch = (exif.iso || '').toString().toLowerCase().includes(q) || (exif.isoSpeedRatings || '').toString().toLowerCase().includes(q);
 
-        const matches = titleMatch || dateMatch || fileMatch || pText || h2Text || cameraMatch || modelMatch || lensMatch || apertureMatch || shutterMatch || isoMatch;
+        const matches = dateMatch || fileMatch || pText || cameraMatch || modelMatch || lensMatch || apertureMatch || shutterMatch || isoMatch;
 
         if (matches) {
           thumb.style.display = '';

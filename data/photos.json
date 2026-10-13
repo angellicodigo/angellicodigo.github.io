@@ -1,7 +1,6 @@
 [
   {
     "id": "photo-1",
-    "title": "Misty Alpine Forest",
     "date": "October 2026",
     "filename": "photo-1",
     "hasPair": true,
@@ -28,7 +27,6 @@
   },
   {
     "id": "photo-2",
-    "title": "Minimalist Concrete Facade",
     "date": "September 2026",
     "filename": "photo-2",
     "hasPair": true,
@@ -55,7 +53,6 @@
   },
   {
     "id": "photo-3",
-    "title": "Golden Hour Coastline",
     "date": "August 2026",
     "filename": "photo-3",
     "hasPair": true,
@@ -82,7 +79,6 @@
   },
   {
     "id": "photo-4",
-    "title": "Monochrome Studio Portrait",
     "date": "July 2026",
     "filename": "photo-4",
     "hasPair": true,
@@ -109,7 +105,6 @@
   },
   {
     "id": "photo-5",
-    "title": "Midnight Tokyo Alley",
     "date": "June 2026",
     "filename": "photo-5",
     "hasPair": true,
@@ -136,12 +131,10 @@
   },
   {
     "id": "photo-6",
-    "title": "Desert Dune Geometry",
     "date": "May 2026",
     "filename": "photo-6",
-    "hasPair": true,
+    "hasPair": false,
     "editedUrl": "images/fulls/photo-6-edited.jpg",
-    "rawUrl": "images/fulls/photo-6-raw.jpg",
     "thumbUrl": "images/thumbs/photo-6.jpg",
     "aspectRatio": "2:3",
     "dimensions": {

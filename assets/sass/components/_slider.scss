@@ -31,15 +31,34 @@
 
 	.slider-container,
 	.comparison-slider {
-		height: 80vh;
-		max-height: 800px;
-		max-width: 1200px;
+		box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+		height: auto;
+		max-height: min(78vh, 800px);
+		max-width: min(85vw, 1200px);
 		overflow: hidden;
 		position: relative;
 		touch-action: none;
 		user-select: none;
 		-webkit-user-select: none;
-		width: 85vw;
+		width: auto;
+
+		&.slider-hidden {
+			.slider-divider,
+			.slider-handle,
+			.divider-handle,
+			.drag-handle,
+			.layer-raw,
+			.layer-bottom,
+			.slider-badge {
+				display: none !important;
+			}
+
+			.layer-edited,
+			.layer-top,
+			.clip-layer {
+				clip-path: none !important;
+			}
+		}
 
 		.layer-raw,
 		.layer-bottom {
@@ -53,7 +72,7 @@
 			img {
 				display: block;
 				height: 100%;
-				object-fit: contain;
+				object-fit: cover;
 				width: 100%;
 			}
 		}
@@ -75,7 +94,7 @@
 			img {
 				display: block;
 				height: 100%;
-				object-fit: contain;
+				object-fit: cover;
 				width: 100%;
 			}
 		}
@@ -142,6 +161,39 @@
 		}
 	}
 
+	.slider-toggle-btn {
+		align-items: center;
+		background: rgba(0, 0, 0, 0.7);
+		border: 1px solid rgba(255, 255, 255, 0.3);
+		border-radius: 4px;
+		color: _palette(fg-bold);
+		cursor: pointer;
+		display: inline-flex;
+		font-size: 0.8em;
+		font-weight: _font(weight);
+		gap: 0.5em;
+		letter-spacing: _font(kerning-alt);
+		padding: 0.5em 1.1em;
+		position: absolute;
+		left: 2em;
+		top: 1.4em;
+		text-transform: uppercase;
+		transition: all #{_duration(transition)} ease;
+		z-index: 8;
+
+		&:hover {
+			background: rgba(0, 0, 0, 0.9);
+			border-color: _palette(accent1);
+			color: #ffffff;
+		}
+
+		&.active {
+			background: _palette(accent1);
+			border-color: transparent;
+			color: #ffffff;
+		}
+	}
+
 	.lightbox-exif,
 	.exif-container,
 	.exif-data,
@@ -172,6 +224,10 @@
 				color: _palette(fg-light);
 			}
 		}
+
+		.exif-date {
+			color: _palette(fg-bold);
+		}
 	}
 
 	.lightbox-close,
@@ -194,15 +250,7 @@
 	}
 
 	.lightbox-title {
-		color: _palette(fg-bold);
-		font-size: 1.1em;
-		font-weight: 300;
-		left: 2em;
-		letter-spacing: 0.05em;
-		margin: 0;
-		position: absolute;
-		top: 1.4em;
-		z-index: 7;
+		display: none;
 	}
 
 	.nav-previous,
