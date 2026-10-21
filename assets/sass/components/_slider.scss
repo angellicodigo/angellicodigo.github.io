@@ -161,6 +161,30 @@
 		}
 	}
 
+	.lightbox-video-container {
+		align-items: center;
+		aspect-ratio: 16 / 9;
+		box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+		display: none;
+		justify-content: center;
+		max-height: min(78vh, 600px);
+		max-width: min(85vw, 1000px);
+		overflow: hidden;
+		position: relative;
+		width: 100%;
+
+		&.active {
+			display: flex;
+		}
+
+		iframe {
+			border: 0;
+			display: block;
+			height: 100%;
+			width: 100%;
+		}
+	}
+
 	.slider-toggle-btn {
 		align-items: center;
 		background: rgba(0, 0, 0, 0.7);
@@ -264,14 +288,14 @@
 		cursor: pointer;
 		display: flex;
 		font-size: 2.5em;
-		height: 4em;
+		height: 3em;
 		justify-content: center;
-		margin-top: -2em;
+		margin-top: -1em;
 		opacity: 0.55;
 		position: absolute;
 		top: 50%;
 		transition: opacity #{_duration(transition)} ease;
-		width: 3em;
+		width: 2em;
 		z-index: 7;
 
 		&:hover {

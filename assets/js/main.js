@@ -1,163 +1,19 @@
 /**
  * Photography Portfolio Modernization
- * Vanilla ES6+ Comparison Lightbox & Gallery Engine
+ * Vanilla ES6+ Gallery & Comparison Engine
  *
- * Originally authored zero-dependency module:
- * - Pointer Events (pointerdown, pointermove, pointerup, pointercancel, setPointerCapture)
- * - Draggable split comparison slider with clip-path
- * - ORIGINAL (RAW) vs EDITED visual badges
- * - Single-photo fallback
- * - Keyboard navigation (ArrowLeft, ArrowRight, Escape)
- * - EXIF metadata display
- * - Real-time search filtering & empty-state management
+ * Single Source of Truth: data/photos.json
+ * - Each object in data/photos.json generates a gallery tile automatically
+ * - Cloudinary photos: url, thumbUrl (optional; auto-resized if omitted), camera, lens, focal length, aperture, shutter speed, iso, date
+ * - YouTube videos: video (or url), thumbUrl (optional; auto-generated if omitted)
  */
 
 (function () {
   'use strict';
 
-  // 1. Embedded fallback photo catalog (guarantees zero-dependency offline & static preview)
-  const FALLBACK_PHOTOS = [
-    {
-      id: 'photo-1',
-      date: 'October 2026',
-      filename: 'photo-1',
-      hasPair: true,
-      editedUrl: 'images/fulls/photo-1-edited.jpg',
-      rawUrl: 'images/fulls/photo-1-raw.jpg',
-      thumbUrl: 'images/thumbs/photo-1.jpg',
-      aspectRatio: '3:2',
-      dimensions: { width: 1400, height: 933 },
-      exif: {
-        camera: 'Sony Alpha 7 IV',
-        model: 'Sony Alpha 7 IV',
-        lens: 'FE 24-70mm f/2.8 GM II',
-        focalLength: '45mm',
-        aperture: 'f/4.0',
-        fNumber: '4.0',
-        shutterSpeed: '1/160s',
-        exposureTime: '1/160',
-        iso: '100',
-        isoSpeedRatings: 100
-      }
-    },
-    {
-      id: 'photo-2',
-      date: 'September 2026',
-      filename: 'photo-2',
-      hasPair: true,
-      editedUrl: 'images/fulls/photo-2-edited.jpg',
-      rawUrl: 'images/fulls/photo-2-raw.jpg',
-      thumbUrl: 'images/thumbs/photo-2.jpg',
-      aspectRatio: '3:2',
-      dimensions: { width: 1400, height: 935 },
-      exif: {
-        camera: 'Leica Q2',
-        model: 'Leica Q2',
-        lens: 'Summilux 28mm f/1.7 ASPH',
-        focalLength: '28mm',
-        aperture: 'f/5.6',
-        fNumber: '5.6',
-        shutterSpeed: '1/500s',
-        exposureTime: '1/500',
-        iso: '100',
-        isoSpeedRatings: 100
-      }
-    },
-    {
-      id: 'photo-3',
-      date: 'August 2026',
-      filename: 'photo-3',
-      hasPair: true,
-      editedUrl: 'images/fulls/photo-3-edited.jpg',
-      rawUrl: 'images/fulls/photo-3-raw.jpg',
-      thumbUrl: 'images/thumbs/photo-3.jpg',
-      aspectRatio: '3:2',
-      dimensions: { width: 1400, height: 931 },
-      exif: {
-        camera: 'Canon EOS R5',
-        model: 'Canon EOS R5',
-        lens: 'RF 24-105mm f/4L IS USM',
-        focalLength: '35mm',
-        aperture: 'f/8.0',
-        fNumber: '8.0',
-        shutterSpeed: '1/250s',
-        exposureTime: '1/250',
-        iso: '100',
-        isoSpeedRatings: 100
-      }
-    },
-    {
-      id: 'photo-4',
-      date: 'July 2026',
-      filename: 'photo-4',
-      hasPair: true,
-      editedUrl: 'images/fulls/photo-4-edited.jpg',
-      rawUrl: 'images/fulls/photo-4-raw.jpg',
-      thumbUrl: 'images/thumbs/photo-4.jpg',
-      aspectRatio: '4:5',
-      dimensions: { width: 1400, height: 1750 },
-      exif: {
-        camera: 'Fujifilm GFX 100S',
-        model: 'Fujifilm GFX 100S',
-        lens: 'GF 110mm f/2 R LM WR',
-        focalLength: '110mm',
-        aperture: 'f/2.0',
-        fNumber: '2.0',
-        shutterSpeed: '1/200s',
-        exposureTime: '1/200',
-        iso: '160',
-        isoSpeedRatings: 160
-      }
-    },
-    {
-      id: 'photo-5',
-      date: 'June 2026',
-      filename: 'photo-5',
-      hasPair: true,
-      editedUrl: 'images/fulls/photo-5-edited.jpg',
-      rawUrl: 'images/fulls/photo-5-raw.jpg',
-      thumbUrl: 'images/thumbs/photo-5.jpg',
-      aspectRatio: '2:3',
-      dimensions: { width: 1400, height: 2100 },
-      exif: {
-        camera: 'Sony Alpha 7S III',
-        model: 'Sony Alpha 7S III',
-        lens: 'FE 35mm f/1.4 GM',
-        focalLength: '35mm',
-        aperture: 'f/1.4',
-        fNumber: '1.4',
-        shutterSpeed: '1/60s',
-        exposureTime: '1/60',
-        iso: '1600',
-        isoSpeedRatings: 1600
-      }
-    },
-    {
-      id: 'photo-6',
-      date: 'May 2026',
-      filename: 'photo-6',
-      hasPair: false,
-      editedUrl: 'images/fulls/photo-6-edited.jpg',
-      thumbUrl: 'images/thumbs/photo-6.jpg',
-      aspectRatio: '2:3',
-      dimensions: { width: 1400, height: 2100 },
-      exif: {
-        camera: 'Hasselblad X2D 100C',
-        model: 'Hasselblad X2D 100C',
-        lens: 'XCD 55mm f/2.5 V',
-        focalLength: '55mm',
-        aperture: 'f/8.0',
-        fNumber: '8.0',
-        shutterSpeed: '1/640s',
-        exposureTime: '1/640',
-        iso: '64',
-        isoSpeedRatings: 64
-      }
-    }
-  ];
-
-  let photoCatalog = [...FALLBACK_PHOTOS];
-  let currentPhoto = null;
+  let photoCatalog = [];
+  let galleryItems = [];
+  let currentItem = null;
   let isDragging = false;
   let activePointerId = null;
   let currentSplitPct = 50;
@@ -179,15 +35,28 @@
   let exifContainer = null;
   let sliderToggleBtn = null;
   let sliderToggleText = null;
+  let videoContainer = null;
+  let videoFrame = null;
 
-  // 2. Remove is-preload on page load
-  window.addEventListener('load', () => {
-    window.setTimeout(() => {
-      document.body.classList.remove('is-preload');
-    }, 100);
-  });
+  // Extract YouTube ID from standard, short, or embed URLs
+  function getYouTubeId(url) {
+    if (!url || typeof url !== 'string') return null;
+    const match = url.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i);
+    return match ? match[1] : null;
+  }
 
-  // Fit comparison slider container precisely to the image aspect ratio
+  // Rewrite Cloudinary URL to thumbnail transformation (c_scale,w_600)
+  function getCloudinaryThumbUrl(url, width = 600) {
+    if (!url || typeof url !== 'string') return url;
+    if (url.includes('res.cloudinary.com') && url.includes('/image/upload/')) {
+      if (!url.match(/\/image\/upload\/[a-z0-9_,]+\//)) {
+        return url.replace('/image/upload/', `/image/upload/c_scale,w_${width}/`);
+      }
+    }
+    return url;
+  }
+
+  // Sizing slider container to photo aspect ratio
   function fitSliderToPhoto(photo) {
     if (!sliderContainer || !photo) return;
     const maxW = Math.min(window.innerWidth * 0.85, 1200);
@@ -263,14 +132,13 @@
     setSliderActive(!isSliderActive);
   }
 
-  // Window resize keeps slider container matched to photo area
   window.addEventListener('resize', () => {
-    if (isLightboxOpen() && currentPhoto) {
-      fitSliderToPhoto(currentPhoto);
+    if (isLightboxOpen() && currentItem && !currentItem.isVideo) {
+      fitSliderToPhoto(currentItem);
     }
   });
 
-  // 3. Initialize Lightbox DOM
+  // Initialize Lightbox DOM
   function createLightboxDOM() {
     let existing = document.querySelector('.lightbox, .comparison-lightbox, #lightbox');
     if (existing) {
@@ -281,7 +149,7 @@
       lightboxEl.className = 'lightbox comparison-lightbox';
       lightboxEl.setAttribute('role', 'dialog');
       lightboxEl.setAttribute('aria-modal', 'true');
-      lightboxEl.setAttribute('aria-label', 'Photo comparison view');
+      lightboxEl.setAttribute('aria-label', 'Gallery view');
       lightboxEl.style.display = 'none';
 
       lightboxEl.innerHTML = `
@@ -305,6 +173,10 @@
           <div class="slider-divider slider-handle divider-handle drag-handle" style="left: 50%;" role="slider" aria-label="Comparison split position" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50" tabindex="0"></div>
         </div>
 
+        <div class="lightbox-video-container" id="lightbox-video-container" style="display: none;">
+          <iframe id="lightbox-video-frame" src="" allowfullscreen allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"></iframe>
+        </div>
+
         <div class="lightbox-exif exif-container exif-data photo-exif" aria-label="EXIF metadata"></div>
       `;
 
@@ -325,6 +197,8 @@
     badgeRaw = lightboxEl.querySelector('.badge-raw');
     badgeEdited = lightboxEl.querySelector('.badge-edited');
     exifContainer = lightboxEl.querySelector('.lightbox-exif, .exif-container, .exif-data, .photo-exif');
+    videoContainer = lightboxEl.querySelector('.lightbox-video-container, #lightbox-video-container');
+    videoFrame = lightboxEl.querySelector('#lightbox-video-frame');
 
     if (dividerHandle) {
       dividerHandle.style.left = '50%';
@@ -341,7 +215,7 @@
     initControls();
   }
 
-  // 4. Split position manipulation
+  // Split manipulation
   function setSplit(pct) {
     currentSplitPct = pct;
     const clampedPct = Math.max(0, Math.min(100, pct));
@@ -349,7 +223,6 @@
       dividerHandle.style.left = `${clampedPct}%`;
       dividerHandle.setAttribute('aria-valuenow', Math.round(clampedPct).toString());
     }
-    // Edited layer sits on top; clip from right so left portion shows edited.
     if (editedLayer) {
       if (isSliderActive) {
         editedLayer.style.clipPath = `inset(0 ${100 - clampedPct}% 0 0)`;
@@ -368,12 +241,11 @@
     setSplit(pct);
   }
 
-  // 5. Pointer Events handling
   function initPointerEvents() {
     if (!dividerHandle || !sliderContainer) return;
 
     function onPointerDown(e) {
-      if (!isSliderActive && currentPhoto && currentPhoto.hasPair) {
+      if (!isSliderActive && currentItem && currentItem.hasPair) {
         setSliderActive(true);
       }
       isDragging = true;
@@ -388,7 +260,6 @@
 
     dividerHandle.addEventListener('pointerdown', onPointerDown);
 
-    // Window move listener tracks even when pointer moves outside element bounds
     window.addEventListener('pointermove', (e) => {
       if (!isDragging) return;
       updateSplitFromClientX(e.clientX);
@@ -412,12 +283,10 @@
 
     window.addEventListener('pointerup', endDrag);
     dividerHandle.addEventListener('pointerup', endDrag);
-
     window.addEventListener('pointercancel', endDrag);
     dividerHandle.addEventListener('pointercancel', endDrag);
   }
 
-  // 6. Navigation & Lightbox Controls
   function isLightboxOpen() {
     return lightboxEl && (
       lightboxEl.classList.contains('active') ||
@@ -446,38 +315,37 @@
       dividerHandle.style.left = '50%';
       dividerHandle.setAttribute('aria-valuenow', '50');
     }
+    if (videoFrame) {
+      videoFrame.src = '';
+    }
+    if (videoContainer) {
+      videoContainer.style.display = 'none';
+      videoContainer.classList.remove('active');
+    }
   }
 
-  function getActivePhotos() {
-    const thumbs = Array.from(document.querySelectorAll('#main article.thumb'));
-    const visibleThumbs = thumbs.filter(thumb => {
-      return window.getComputedStyle(thumb).display !== 'none' && !thumb.classList.contains('hidden');
+  function getActiveItems() {
+    return galleryItems.filter(item => {
+      if (!item.thumbEl) return true;
+      const style = window.getComputedStyle(item.thumbEl);
+      return style.display !== 'none' && !item.thumbEl.classList.contains('hidden');
     });
-
-    if (visibleThumbs.length > 0) {
-      return visibleThumbs
-        .map(thumb => photoCatalog.find(p => p.id === thumb.dataset.photoId))
-        .filter(Boolean);
-    }
-    return photoCatalog;
   }
 
   function navigateNext() {
-    const activeList = getActivePhotos();
+    const activeList = getActiveItems();
     if (activeList.length === 0) return;
-    const currentIndex = activeList.findIndex(p => p.id === currentPhoto?.id);
+    const currentIndex = activeList.findIndex(item => item.index === currentItem?.index);
     const nextIndex = (currentIndex + 1) % activeList.length;
-    currentPhoto = activeList[nextIndex];
-    renderLightboxPhoto(currentPhoto);
+    renderLightboxItem(activeList[nextIndex]);
   }
 
   function navigatePrev() {
-    const activeList = getActivePhotos();
+    const activeList = getActiveItems();
     if (activeList.length === 0) return;
-    const currentIndex = activeList.findIndex(p => p.id === currentPhoto?.id);
+    const currentIndex = activeList.findIndex(item => item.index === currentItem?.index);
     const prevIndex = (currentIndex - 1 + activeList.length) % activeList.length;
-    currentPhoto = activeList[prevIndex];
-    renderLightboxPhoto(currentPhoto);
+    renderLightboxItem(activeList[prevIndex]);
   }
 
   function initControls() {
@@ -502,14 +370,12 @@
       });
     }
 
-    // Close on backdrop click (outside slider & controls)
     lightboxEl.addEventListener('click', (e) => {
       if (e.target === lightboxEl) {
         closeLightbox();
       }
     });
 
-    // Global keyboard navigation
     window.addEventListener('keydown', (e) => {
       if (!isLightboxOpen()) return;
       if (e.key === 'Escape') {
@@ -525,52 +391,55 @@
     });
   }
 
-  // 7. Render photo into lightbox
-  function renderLightboxPhoto(photo) {
-    if (!photo) return;
-    currentPhoto = photo;
+  // Render item (photo or YouTube video) into lightbox
+  function renderLightboxItem(item) {
+    if (!item) return;
+    currentItem = item;
 
     if (!lightboxEl) {
       createLightboxDOM();
     }
 
-    // Exact sizing to fit photo aspect ratio so slider cannot leave photo area
-    fitSliderToPhoto(photo);
+    // Handle YouTube Video
+    if (item.isVideo) {
+      if (sliderContainer) sliderContainer.style.display = 'none';
+      if (sliderToggleBtn) sliderToggleBtn.style.display = 'none';
+      setSliderActive(false);
 
-    // Update EXIF metadata
-    if (exifContainer) {
-      const exif = photo.exif || {};
-      const items = [];
-
-      if (exif.camera || exif.model) {
-        items.push(`<span class="exif-item exif-camera"><i class="fa fa-camera" aria-hidden="true"></i> ${exif.camera || exif.model}</span>`);
-      }
-      if (exif.aperture || exif.fNumber) {
-        const ap = exif.aperture || `f/${exif.fNumber}`;
-        items.push(`<span class="exif-item exif-aperture">${ap}</span>`);
-      }
-      if (exif.shutterSpeed || exif.exposureTime) {
-        const ss = exif.shutterSpeed || `${exif.exposureTime}s`;
-        items.push(`<span class="exif-item exif-shutter">${ss}</span>`);
-      }
-      if (exif.iso || exif.isoSpeedRatings) {
-        const isoVal = exif.iso || exif.isoSpeedRatings;
-        items.push(`<span class="exif-item exif-iso">ISO ${isoVal}</span>`);
-      }
-      if (photo.date) {
-        items.push(`<span class="exif-item exif-date"><i class="fa fa-calendar-alt" aria-hidden="true"></i> ${photo.date}</span>`);
+      if (exifContainer) {
+        exifContainer.style.display = 'none';
+        exifContainer.innerHTML = '';
       }
 
-      exifContainer.innerHTML = items.join('');
+      if (videoContainer && videoFrame) {
+        videoContainer.style.display = 'flex';
+        videoContainer.classList.add('active');
+        // Do not autoplay video on open
+        videoFrame.src = `https://www.youtube.com/embed/${item.youtubeId}?autoplay=0&rel=0`;
+      }
+      return;
     }
 
-    // Single-photo fallback vs Paired comparison
-    const hasPair = photo.hasPair === true && !!photo.rawUrl && !!photo.editedUrl;
+    // Handle Photograph
+    if (videoContainer) {
+      videoContainer.style.display = 'none';
+      videoContainer.classList.remove('active');
+    }
+    if (videoFrame) {
+      videoFrame.src = '';
+    }
+
+    if (sliderContainer) {
+      sliderContainer.style.display = '';
+    }
+
+    fitSliderToPhoto(item);
+
+    const singleUrl = item.editedUrl || item.rawUrl || item.url || '';
+    const hasPair = item.hasPair === true && !!item.rawUrl && !!item.editedUrl;
 
     if (!hasPair) {
-      // Single photo view (no paired version exists)
       if (sliderToggleBtn) sliderToggleBtn.style.display = 'none';
-      const singleUrl = photo.editedUrl || photo.rawUrl || photo.url || '';
       if (rawImg) {
         rawImg.src = singleUrl;
         rawImg.alt = 'Photograph';
@@ -579,162 +448,176 @@
         editedImg.src = singleUrl;
         editedImg.alt = 'Photograph';
         editedImg.onload = () => {
-          if (currentPhoto === photo) fitSliderToPhoto(photo);
+          if (currentItem === item) fitSliderToPhoto(item);
         };
       }
       setSliderActive(false);
     } else {
-      // Comparison view available; defaults to the edited version
       if (sliderToggleBtn) sliderToggleBtn.style.display = 'inline-flex';
       if (rawImg) {
-        rawImg.src = photo.rawUrl;
+        rawImg.src = item.rawUrl;
         rawImg.alt = 'Original RAW photo';
       }
       if (editedImg) {
-        editedImg.src = photo.editedUrl;
+        editedImg.src = item.editedUrl;
         editedImg.alt = 'Edited photo';
         editedImg.onload = () => {
-          if (currentPhoto === photo) fitSliderToPhoto(photo);
+          if (currentItem === item) fitSliderToPhoto(item);
         };
       }
       setSliderActive(false);
     }
+
+    // Render bottom black bar EXIF metadata:
+    // camera, lens, focal length, aperture, shutter speed, iso, date
+    // focal length, aperture, shutter speed have NO text prefix; ISO has ISO prefix
+    if (exifContainer) {
+      const camera = item.camera || (item.exif && (item.exif.camera || item.exif.model)) || '';
+      const lens = item.lens || (item.exif && item.exif.lens) || '';
+      const focalLength = item['focal length'] || item.focalLength || item['focal_length'] || (item.exif && (item.exif['focal length'] || item.exif.focalLength)) || '';
+      const aperture = item.aperture || (item.exif && (item.exif.aperture || item.exif.fNumber)) || '';
+      const shutterSpeed = item['shutter speed'] || item.shutterSpeed || item['shutter_speed'] || (item.exif && (item.exif['shutter speed'] || item.exif.shutterSpeed || item.exif.exposureTime)) || '';
+      const iso = item.iso || (item.exif && (item.exif.iso || item.exif.isoSpeedRatings)) || '';
+      const date = item.date || (item.exif && item.exif.date) || '';
+
+      const items = [];
+
+      // 1. Camera
+      if (camera) {
+        items.push(`<span class="exif-item exif-camera"><i class="fa fa-camera" aria-hidden="true"></i> ${camera}</span>`);
+      }
+
+      // 2. Lens
+      if (lens) {
+        items.push(`<span class="exif-item exif-lens">${lens}</span>`);
+      }
+
+      // 3. Focal Length (no text prefix)
+      if (focalLength) {
+        const flText = String(focalLength).trim().replace(/^focal\s*length\s*:?\s*/i, '');
+        items.push(`<span class="exif-item exif-focal">${flText}</span>`);
+      }
+
+      // 4. Aperture (no text prefix)
+      if (aperture) {
+        let apText = String(aperture).trim().replace(/^aperture\s*:?\s*/i, '');
+        if (!apText.startsWith('f/') && !isNaN(Number(apText))) {
+          apText = `f/${apText}`;
+        }
+        items.push(`<span class="exif-item exif-aperture">${apText}</span>`);
+      }
+
+      // 5. Shutter Speed (no text prefix)
+      if (shutterSpeed) {
+        const ssText = String(shutterSpeed).trim().replace(/^shutter\s*speed\s*:?\s*/i, '');
+        items.push(`<span class="exif-item exif-shutter">${ssText}</span>`);
+      }
+
+      // 6. ISO (with ISO prefix)
+      if (iso) {
+        const isoStr = String(iso).trim();
+        const isoText = isoStr.toUpperCase().startsWith('ISO') ? isoStr : `ISO ${isoStr}`;
+        items.push(`<span class="exif-item exif-iso">${isoText}</span>`);
+      }
+
+      // 7. Date
+      if (date) {
+        items.push(`<span class="exif-item exif-date"><i class="fa fa-calendar-alt" aria-hidden="true"></i> ${date}</span>`);
+      }
+
+      if (items.length > 0) {
+        exifContainer.style.display = 'flex';
+        exifContainer.innerHTML = items.join('');
+      } else {
+        exifContainer.style.display = 'none';
+        exifContainer.innerHTML = '';
+      }
+    }
   }
 
-  // Expose renderLightboxPhoto, setSliderActive, and photoCatalog on window for automated verification
-  window.renderLightboxPhoto = renderLightboxPhoto;
-  window.setSliderActive = setSliderActive;
-  window.toggleSlider = toggleSlider;
-  window.fitSliderToPhoto = fitSliderToPhoto;
-  window.photoCatalog = photoCatalog;
+  const renderLightboxPhoto = renderLightboxItem;
 
-  // 8. Gallery Grid Event Binding
-  function bindGalleryEvents() {
-    const thumbs = Array.from(document.querySelectorAll('#main article.thumb'));
-    thumbs.forEach((thumb, index) => {
-      // Attach photo-id
-      const photo = photoCatalog[index] || photoCatalog.find(p => {
-        const img = thumb.querySelector('img');
-        return img && img.src.includes(p.filename);
-      }) || photoCatalog[index];
+  // Render gallery from photoCatalog into #main
+  function renderGallery() {
+    const mainEl = document.getElementById('main');
+    if (!mainEl) return;
 
-      if (photo) {
-        thumb.dataset.photoId = photo.id;
+    // Remove any existing thumb elements (preserve empty-state)
+    const existingThumbs = mainEl.querySelectorAll('article.thumb');
+    existingThumbs.forEach(el => el.remove());
+
+    const emptyState = document.getElementById('empty-state');
+
+    galleryItems = photoCatalog.map((entry, index) => {
+      const videoUrl = entry.video || entry.videoUrl || (getYouTubeId(entry.url) ? entry.url : null);
+      const ytId = getYouTubeId(videoUrl);
+      const isVideo = !!ytId;
+
+      const fullUrl = isVideo ? videoUrl : (entry.url || entry.imageUrl || entry.photo || '');
+      let thumbUrl = entry.thumbUrl || entry.thumb || '';
+
+      if (!thumbUrl) {
+        if (isVideo) {
+          thumbUrl = `https://img.youtube.com/vi/${ytId}/hqdefault.jpg`;
+        } else if (fullUrl) {
+          thumbUrl = getCloudinaryThumbUrl(fullUrl, 600);
+        }
       }
+
+      const dateText = entry.date || '';
+
+      const article = document.createElement('article');
+      article.className = 'thumb';
+      article.dataset.index = index;
+
+      article.innerHTML = `
+        <a href="${fullUrl}" class="image">
+          <img src="${thumbUrl}" alt="${dateText}" loading="lazy" />
+        </a>
+        ${dateText ? `<h2>${dateText}</h2><p>${dateText}</p>` : ''}
+      `;
+
+      if (emptyState) {
+        mainEl.insertBefore(article, emptyState);
+      } else {
+        mainEl.appendChild(article);
+      }
+
+      const itemData = {
+        index,
+        thumbEl: article,
+        isVideo,
+        youtubeId: ytId,
+        url: fullUrl,
+        thumbUrl,
+        ...entry
+      };
 
       function handleOpen(e) {
         if (e) {
           e.preventDefault();
           e.stopPropagation();
         }
-        const pId = thumb.dataset.photoId;
-        const matched = photoCatalog.find(p => p.id === pId) || photo;
-        if (matched) {
-          renderLightboxPhoto(matched);
-          openLightbox();
-        }
+        renderLightboxItem(itemData);
+        openLightbox();
       }
 
-      const link = thumb.querySelector('a');
+      article.addEventListener('click', handleOpen);
+      const link = article.querySelector('a');
       if (link) {
         link.addEventListener('click', handleOpen);
       }
 
-      thumb.addEventListener('click', handleOpen);
+      return itemData;
     });
 
-    // Delegated click handler on document to guarantee any thumb / anchor click is prevented and handled
-    if (!window.__delegatedClickBound) {
-      window.__delegatedClickBound = true;
-      document.addEventListener('click', (e) => {
-        const thumb = e.target.closest('#main article.thumb');
-        if (thumb) {
-          e.preventDefault();
-          const pId = thumb.dataset.photoId;
-          const matched = photoCatalog.find(p => p.id === pId) || photoCatalog[0];
-          if (matched) {
-            renderLightboxPhoto(matched);
-            openLightbox();
-          }
-        }
-      });
-    }
+    // Reveal page once gallery is populated
+    window.setTimeout(() => {
+      document.body.classList.remove('is-preload');
+    }, 100);
   }
 
-  // 9. Real-Time Search Filtering
-  function initSearch() {
-    const searchInput = document.getElementById('photo-search');
-    const emptyState = document.getElementById('empty-state');
-
-    function filterPhotos(query) {
-      const q = (query || '').trim().toLowerCase();
-      let matchCount = 0;
-      const thumbs = Array.from(document.querySelectorAll('#main article.thumb'));
-
-      thumbs.forEach((thumb, index) => {
-        const photoId = thumb.dataset.photoId;
-        const photo = (photoId ? photoCatalog.find(p => p.id === photoId) : null)
-          || photoCatalog[index]
-          || photoCatalog.find(p => {
-               const img = thumb.querySelector('img');
-               return img && img.src.includes(p.filename);
-             });
-        if (!photo) return;
-
-        if (!q) {
-          thumb.style.display = '';
-          thumb.classList.remove('hidden');
-          matchCount++;
-          return;
-        }
-
-        const dateMatch = (photo.date || '').toLowerCase().includes(q);
-        const fileMatch = (photo.filename || '').toLowerCase().includes(q);
-        const pText = (thumb.querySelector('p')?.textContent || '').toLowerCase().includes(q);
-        const exif = photo.exif || {};
-        const cameraMatch = (exif.camera || '').toLowerCase().includes(q);
-        const modelMatch = (exif.model || '').toLowerCase().includes(q);
-        const lensMatch = (exif.lens || '').toLowerCase().includes(q);
-        const apertureMatch = (exif.aperture || '').toLowerCase().includes(q) || (exif.fNumber || '').toString().toLowerCase().includes(q);
-        const shutterMatch = (exif.shutterSpeed || '').toLowerCase().includes(q) || (exif.exposureTime || '').toLowerCase().includes(q);
-        const isoMatch = (exif.iso || '').toString().toLowerCase().includes(q) || (exif.isoSpeedRatings || '').toString().toLowerCase().includes(q);
-
-        const matches = dateMatch || fileMatch || pText || cameraMatch || modelMatch || lensMatch || apertureMatch || shutterMatch || isoMatch;
-
-        if (matches) {
-          thumb.style.display = '';
-          thumb.classList.remove('hidden');
-          matchCount++;
-        } else {
-          thumb.style.display = 'none';
-          thumb.classList.add('hidden');
-        }
-      });
-
-      if (emptyState) {
-        if (matchCount === 0 && q) {
-          emptyState.style.display = 'block';
-          emptyState.classList.remove('hidden');
-        } else {
-          emptyState.style.display = 'none';
-          emptyState.classList.add('hidden');
-        }
-      }
-    }
-
-    if (searchInput) {
-      searchInput.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') {
-          e.preventDefault();
-        }
-      });
-      searchInput.addEventListener('input', (e) => filterPhotos(e.target.value));
-      searchInput.addEventListener('keyup', (e) => filterPhotos(e.target.value));
-      searchInput.addEventListener('change', (e) => filterPhotos(e.target.value));
-    }
-  }
-
-  // 10. Catalog Hydration
+  // Load photos.json
   async function loadPhotoCatalog() {
     try {
       const response = await fetch('data/photos.json');
@@ -743,35 +626,51 @@
         if (Array.isArray(data) && data.length > 0) {
           photoCatalog = data;
           window.photoCatalog = photoCatalog;
+          renderGallery();
         }
       }
     } catch (_) {
-      // Local preview / offline fallback to embedded catalog
-      photoCatalog = [...FALLBACK_PHOTOS];
-      window.photoCatalog = photoCatalog;
+      // In case fetch is blocked (e.g. offline file://), remove preload
+      document.body.classList.remove('is-preload');
     }
   }
 
+  function initSearch() {
+    const searchInput = document.getElementById('photo-search');
+    if (searchInput) {
+      searchInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+        }
+      });
+    }
+  }
+
+  // Preload non-video images
   function preloadImages() {
-    photoCatalog.forEach(photo => {
-      if (photo.rawUrl) {
-        const r = new Image();
-        r.src = photo.rawUrl;
-      }
-      if (photo.editedUrl) {
-        const e = new Image();
-        e.src = photo.editedUrl;
+    galleryItems.forEach(item => {
+      if (!item.isVideo && item.url) {
+        const img = new Image();
+        img.src = item.url;
       }
     });
   }
 
-  // 11. Application Bootstrap (synchronous initial binding followed by async hydration)
+  // Expose on window for testing and verification
+  window.renderLightboxPhoto = renderLightboxPhoto;
+  window.renderLightboxItem = renderLightboxItem;
+  window.renderGallery = renderGallery;
+  window.setSliderActive = setSliderActive;
+  window.toggleSlider = toggleSlider;
+  window.fitSliderToPhoto = fitSliderToPhoto;
+  window.photoCatalog = photoCatalog;
+  window.getYouTubeId = getYouTubeId;
+  window.getCloudinaryThumbUrl = getCloudinaryThumbUrl;
+
   async function bootstrap() {
     createLightboxDOM();
-    bindGalleryEvents();
     initSearch();
     await loadPhotoCatalog();
-    bindGalleryEvents();
     preloadImages();
   }
 
