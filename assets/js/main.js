@@ -572,9 +572,8 @@
 
       article.innerHTML = `
         <a href="${fullUrl}" class="image">
-          <img src="${thumbUrl}" alt="${dateText}" loading="lazy" />
+          <img src="${thumbUrl}" alt="" loading="lazy" />
         </a>
-        ${dateText ? `<h2>${dateText}</h2><p>${dateText}</p>` : ''}
       `;
 
       if (emptyState) {
